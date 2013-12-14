@@ -1,9 +1,9 @@
 from flask import Flask, Request, Response
-from blueprint_test import simple_page
+from crunchreport import simple_page
 
 
 application = app = Flask(__name__)
-app.register_blueprint(simple_page, url_prefix='/stories')
+app.register_blueprint(simple_page, url_prefix='/api/stories')
 #@app.route('/')
 #def hello_world():
 #    return 'Hello World!'
