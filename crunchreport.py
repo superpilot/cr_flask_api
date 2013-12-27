@@ -88,8 +88,8 @@ def show_story_comments(page):
 #@simple_page.route('/<page>')
 def local_stories():
   
-    latitude = request.form["latitude"]
-    longitude = request.form["longitude"]
+    #latitude = request.form["latitude"]
+    #longitude = request.form["longitude"]
     #datetime = request.forn["datetime"]
   
     client = Connection('mongodb://crunchreport-alpha:crunchreport-alpha@paulo.mongohq.com:10001/crunchreport-alpha')
@@ -107,16 +107,16 @@ def local_stories():
     counter = 0
 	
     for r in results:
-	json_array.append({"story_id": str(r["_id"]), 'story' : r["story"], "last_report": r["last_report"], "report_count": r["report_count"]})
+	json_array.append({"story_id": str(r["_id"]), 'story' : " ".join(r["keywords"]), "last_report": r["last_report"], "report_count": r["report_count"]})
 	#counter += 1
 	
     json_response = json.dumps({'results': json_array})
   
-    #return Response(json_response, status=200, mimetype='application/json')
+    return Response(json_response, status=200, mimetype='application/json')
     #return page
     #r = requests.get('http://maps.googleapis.com/maps/api/geocode/json?latlng=53.244921,-2.479539&sensor=true')
     #print str(r.json["results"]["formatted_address"])
-    return Response("here")
+    #return Response("here")
     
     
 @simple_page.route('/county', methods=["POST", "GET"])
@@ -126,6 +126,10 @@ def county():
     #county = request.form["county"]
     #longitude = request.form["longitude"]
     #datetime = request.forn["datetime"]
+    
+    r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=34.2437,-118.2437&sensor=true")
+    county = str(r.json["results"][0]["address_components"][3]["long_name"])
+	
   
     client = Connection('mongodb://crunchreport-alpha:crunchreport-alpha@paulo.mongohq.com:10001/crunchreport-alpha')
     db = client["crunchreport-alpha"]
@@ -162,6 +166,9 @@ def state():
     #longitude = request.form["longitude"]
     #datetime = request.forn["datetime"]
   
+    r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=34.2437,-118.2437&sensor=true")
+    state = str(r.json["results"][0]["address_components"][4]["long_name"])
+	    
     client = Connection('mongodb://crunchreport-alpha:crunchreport-alpha@paulo.mongohq.com:10001/crunchreport-alpha')
     db = client["crunchreport-alpha"]
     stories_collection = db["stories"]
@@ -401,6 +408,79 @@ def top_stories(page):
 @simple_page.route("/template")
 def template():
     return render_template('test.html')
+    
+@simple_page.route("/reports/new1", methods=["POST"])
+def add1():
+  
+    report = request.form["report"]
+    #report_datetime = request.form["datetime"]
+    #latitude = request.form["latitude"]
+    #longitude = request.form["longitude"]
+    
+    report_split = report.split(" ")
+    keywords_array = []
+    
+    stop_words_list = ["a", "on", "the", "of", "that", "and", "theres"]
+    for word in report_split:
+	if word not in stop_words_list:
+	    keywords_array.append(word)
+	
+	
+    #thirty_minutes_ago = datetime.datetime.strptime(report_datetime, "%Y-%m-%d %H:%M") - datetime.timedelta(minutes=30)
+    #print "30again" + str(thirty_minutes_ago)
+    
+  
+    #check stories collection to see if one exists with parameters
+    #if it doesnt create one set report count to 1 and create a report
+    
+    #if  it does and report count is 1 then increment and update the gps and addtoset the tags and create the report
+    
+    #when searching look for stories with report count > 1
+    
+    client = Connection('mongodb://crunchreport-alpha:crunchreport-alpha@paulo.mongohq.com:10001/crunchreport-alpha')
+    db = client["crunchreport-alpha"]
+    stories_collection = db["stories"]
+    reports_collection = db["reports"]
+ 
+    #reports_collection.create_index([("coords", GEO2D)])
+ 
+    #stories = stories_collection.find({'datetime': {'$gte': str(thirty_minutes_ago)}, 'keywords': {'$in': keywords_array}, 'coords': SON([('$near', [1, 1]), ('$maxDistance', 20)])})
+    stories = stories_collection.find({"keywords": {"$in": ["monkeeys"]}})
+    stories_count = stories.count()
+    
+    if stories_count == 0:
+	#get county/state
+	# r = requests.get('http://maps.googleapis.com/maps/api/geocode/json?latlng=53.244921,-2.479539&sensor=true')
+	#print str(r.json["results"][0]["address_components"][3])
+	#print str(r.json["results"][0]["formatted_address"])
+	
+	r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=34.2437,-118.2437&sensor=true")
+	county = str(r.json["results"][0]["address_components"][3]["long_name"])
+	state = str(r.json["results"][0]["address_components"][4]["long_name"])
+		
+	story_id = stories_collection.insert({"coords": [1, 1], "keywords": ["monkeeys"], "report_count": 0, "last_report_datetime": "2013-12-12"})
+	print story_id
+	#report_collection.insert()
+	
+	#json_response = json.dumps({'results': json_array})
+	
+	return Response("json_response", status=200, mimetype='application/json')
+    	
+    elif stories_count > 0:
+	r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=34.2437,-118.2437&sensor=true")
+	county = str(r.json["results"][0]["address_components"][3]["long_name"])
+	state = str(r.json["results"][0]["address_components"][4]["long_name"])
+	#print county
+	
+	#get story id
+	#if county != "":
+	stories_collection.update({"_id": ObjectId("52bcd3a05f655547c1e54d76")}, {"$inc": {"report_count": 1}, "$addToSet": {"keywords": { "$each": ["lions", "tigers"]}}, "$set": {"coords": [3, 3], "county": county, "state": state, "last_report_datetime": "2013-12-12"}})
+	#report_collection.insert()
+	#stories_collection.update({"_id": ObjectId("52bcd3a05f655547c1e54d76")}, {"$set": {"county": "county"}})
+	
+	return Response("json_response", status=200, mimetype='application/json')
+    
+	
  
  
  
