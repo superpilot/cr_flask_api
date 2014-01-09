@@ -1,6 +1,8 @@
 import datetime
 import requests
 from requests import async
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import os
 
 def main():
   print "hello"
@@ -14,6 +16,16 @@ def get_location():
   #print str(r.json["results"][0]["formatted_address"])
   #print "location"
   
+  
+def test():
+    #    return s.dumps({ 'id': self.id })
+  a = os.urandom(64)
+  #print(a.encode('base-64'))
+  s = Serializer(a)
+  print s.dumps({"id": "id"})
+  #uuid
+    
 if __name__ == '__main__':
   #main()
-  get_location()
+  test()
+     

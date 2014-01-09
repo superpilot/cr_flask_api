@@ -445,8 +445,10 @@ def add1():
     #reports_collection.create_index([("coords", GEO2D)])
  
     #stories = stories_collection.find({'datetime': {'$gte': str(thirty_minutes_ago)}, 'keywords': {'$in': keywords_array}, 'coords': SON([('$near', [1, 1]), ('$maxDistance', 20)])})
-    stories = stories_collection.find({"keywords": {"$in": ["monkeeys"]}})
+    stories = stories_collection.find({"keywords": {"$in": ["monkeeys"]}}, {"_id": True})
     stories_count = stories.count()
+    story_id = stories[0]["_id"]
+    print story_id
     
     if stories_count == 0:
 	#get county/state
@@ -474,7 +476,7 @@ def add1():
 	
 	#get story id
 	#if county != "":
-	stories_collection.update({"_id": ObjectId("52bcd3a05f655547c1e54d76")}, {"$inc": {"report_count": 1}, "$addToSet": {"keywords": { "$each": ["lions", "tigers"]}}, "$set": {"coords": [3, 3], "county": county, "state": state, "last_report_datetime": "2013-12-12"}})
+	stories_collection.update({"_id": story_id}, {"$inc": {"report_count": 1}, "$addToSet": {"keywords": { "$each": ["lions", "tigers"]}}, "$set": {"coords": [3, 3], "county": county, "state": state, "last_report_datetime": "2013-12-12"}})
 	#report_collection.insert()
 	#stories_collection.update({"_id": ObjectId("52bcd3a05f655547c1e54d76")}, {"$set": {"county": "county"}})
 	
